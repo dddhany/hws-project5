@@ -19,6 +19,7 @@ class MasterViewController: UITableViewController {
         super.viewDidLoad()
         
         navigationItem.rightBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Add, target: self, action: "promptForAnswer")
+        navigationItem.leftBarButtonItem = UIBarButtonItem(barButtonSystemItem: .Refresh, target: self, action: "startGame")
         
         if let startWordsPath = NSBundle.mainBundle().pathForResource("start", ofType: "txt") {
             if let startWords = try? String(contentsOfFile: startWordsPath, usedEncoding: nil){
@@ -44,12 +45,18 @@ class MasterViewController: UITableViewController {
     func promptForAnswer(){
         let ac = UIAlertController(title: "Enter answer", message: nil, preferredStyle: .Alert)
         ac.addTextFieldWithConfigurationHandler(nil)
+
+        let cancelAction = UIAlertAction(title: "Cancel", style: .Cancel) { [ac] (action: UIAlertAction!) in
+            ac.dismissViewControllerAnimated(true, completion: nil)
+        }
+        ac.addAction(cancelAction)
         
         let submitAction = UIAlertAction(title: "Submit", style: .Default) { [unowned self, ac] (action: UIAlertAction!) in
             let answer = ac.textFields![0]
             self.submitAnswer(answer.text!)
         }
         ac.addAction(submitAction)
+
         
         presentViewController(ac, animated: true, completion: nil)
     }
@@ -57,6 +64,14 @@ class MasterViewController: UITableViewController {
     func submitAnswer(answer: String) {
         let lowerAnswer = answer.lowercaseString
         
+        guard wordIsDifferent(lowerAnswer) else {
+            showErrorMessage("Same Word", errorMessage: "You can't just use the same word!")
+            return
+        }
+        guard lowerAnswer.characters.count >= 3 else {
+            showErrorMessage("Too Short", errorMessage: "Enter word with at least 3 characters!")
+            return
+        }
         guard wordIsPossible(lowerAnswer) else {
             showErrorMessage("Word not possible", errorMessage: "You can't spell that word from '\(title!.lowercaseString)'!")
             return
@@ -105,6 +120,10 @@ class MasterViewController: UITableViewController {
         let range = NSMakeRange(0, word.characters.count)
         let misspelledRange = checker.rangeOfMisspelledWordInString(word, range: range, startingAt: 0, wrap: false, language: "en")
         return misspelledRange.location == NSNotFound
+    }
+    
+    func wordIsDifferent(word: String) -> Bool {
+        return word != title!.lowercaseString
     }
 
     override func didReceiveMemoryWarning() {
