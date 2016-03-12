@@ -57,16 +57,30 @@ class MasterViewController: UITableViewController {
     func submitAnswer(answer: String) {
         let lowerAnswer = answer.lowercaseString
         
-        if wordIsPossible(lowerAnswer) {
-            if wordIsOriginal(lowerAnswer) {
-                if wordIsReal(lowerAnswer) {
-                    objects.insert(answer, atIndex: 0)
-                    
-                    let indexPath = NSIndexPath(forRow: 0, inSection: 0)
-                    tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
-                }
-            }
+        guard wordIsPossible(lowerAnswer) else {
+            showErrorMessage("Word not possible", errorMessage: "You can't spell that word from '\(title!.lowercaseString)'!")
+            return
         }
+        guard wordIsOriginal(lowerAnswer) else {
+            showErrorMessage("Word used already", errorMessage: "Be more original!")
+            return
+        }
+        guard wordIsReal(lowerAnswer) else {
+            showErrorMessage("Word not recognised", errorMessage: "You can't just make them up, you know!")
+            return
+        }
+        
+        objects.insert(answer, atIndex: 0)
+        
+        let indexPath = NSIndexPath(forRow: 0, inSection: 0)
+        tableView.insertRowsAtIndexPaths([indexPath], withRowAnimation: .Automatic)
+        
+    }
+    
+    func showErrorMessage(errorTitle: String, errorMessage: String) {
+        let ac = UIAlertController(title: errorTitle, message: errorMessage, preferredStyle: .Alert)
+        ac.addAction(UIAlertAction(title: "OK", style: .Default, handler: nil))
+        presentViewController(ac, animated: true, completion: nil)
     }
     
     func wordIsPossible(word: String) -> Bool {
